@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Кубарь & Увалы</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Sortable.js для плавного Drag & Drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-wrap">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">⚔️</div>
+        <div class="brand-info">
+          <h1 class="brand-title">КУБАРЬ & УВАЛЫ</h1>
+          <span class="chat-badge" id="chatTitleBadge">Загрузка...</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="refreshBtn" title="Обновить данные">↻</button>
+        <button class="icon-btn close-btn" id="closeAppBtn" title="Закрыть">✕</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tabDuty">
+        <span class="tab-icon">🧹</span>
+        <span class="tab-label">Кубарь</span>
+      </button>
+      <button class="tab-btn" data-tab="tabUval">
+        <span class="tab-icon">🎖️</span>
+        <span class="tab-label">Увалы</span>
+      </button>
+      <button class="tab-btn" data-tab="tabStats">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Сводка</span>
+      </button>
+      <button class="tab-btn" data-tab="tabLogs">
+        <span class="tab-icon">📜</span>
+        <span class="tab-label">Журнал</span>
+      </button>
+    </nav>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="content-area">
+
+      <!-- ================= TAB 1: КУБАРЬ (ОЧЕРЕДЬ & ДЕЖУРСТВО) ================= -->
+      <section id="tabDuty" class="tab-content active">
+        <!-- Hero: Сегодня & Завтра -->
+        <div class="duty-hero-grid">
+          <!-- Сегодня -->
+          <div class="duty-card today-card">
+            <div class="duty-header-row">
+              <span class="duty-badge badge-today">🌟 СЕГОДНЯ НА КУБАРЕ</span>
+              <span class="duty-date" id="todayDateLabel">—</span>
+            </div>
+            <div class="duty-person-box" id="todayPersonBox">
+              <div class="person-avatar" id="todayAvatar">?</div>
+              <div class="person-details">
+                <div class="person-name" id="todayName">Загрузка...</div>
+                <div class="person-sub" id="todaySub">Очередь: №—</div>
+              </div>
+            </div>
+            <div class="duty-actions-row">
+              <button class="btn-action btn-replace" id="btnReplaceToday">🔄 Заменить</button>
+              <button class="btn-action btn-advance" id="btnAdvanceDuty">✅ Смена сдана</button>
+            </div>
+          </div>
+
+          <!-- Завтра -->
+          <div class="duty-card tomorrow-card">
+            <div class="duty-header-row">
+              <span class="duty-badge badge-tomorrow">⏳ ЗАВТРА НА КУБАРЕ</span>
+              <span class="duty-date" id="tomorrowDateLabel">—</span>
+            </div>
+            <div class="duty-person-box" id="tomorrowPersonBox">
+              <div class="person-avatar sec" id="tomorrowAvatar">?</div>
+              <div class="person-details">
+                <div class="person-name" id="tomorrowName">Загрузка...</div>
+                <div class="person-sub" id="tomorrowSub">Следующий по очереди</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Очередь бойцов -->
+        <div class="section-title-bar">
+          <div>
+            <h2 class="section-heading">Очередь дежурств по бланку</h2>
+            <p class="section-sub">Зажмите ☰ для изменения порядка очереди</p>
+          </div>
+          <button class="btn-add-pill" id="btnAddMemberDuty">+ Боец</button>
+        </div>
+
+        <!-- Список Drag & Drop -->
+        <div class="queue-list" id="dutyQueueList">
+          <div class="loading-state">Загрузка очереди...</div>
+        </div>
+
+        <!-- Кнопка сохранения очереди -->
+        <div class="sticky-footer">
+          <button class="btn-primary-save" id="btnSaveQueue">
+            <span>💾 Сохранить порядок очереди</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: УВАЛЫ (DUTY PASS) ================= -->
+      <section id="tabUval" class="tab-content">
+        <!-- Поиск & Фильтры -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="uvalSearchInput" placeholder="Поиск по фамилии или @юзернейму...">
+          <button class="search-clear" id="uvalSearchClear" style="display:none;">✕</button>
+        </div>
+
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">Все (<span id="chipAllCount">0</span>)</button>
+          <button class="chip" data-filter="active">В строю (<span id="chipActiveCount">0</span>)</button>
+          <button class="chip" data-filter="with_uval">С увалами >0 (<span id="chipWithUvalCount">0</span>)</button>
+          <button class="chip" data-filter="zero">Без увалов (0) (<span id="chipZeroCount">0</span>)</button>
+          <button class="chip" data-filter="limit">Лимит ≥5 (<span id="chipLimitCount">0</span>)</button>
+        </div>
+
+        <!-- Подсказка чата -->
+        <div class="tip-banner">
+          <div class="tip-icon">💡</div>
+          <div class="tip-text">
+            <b>Быстрый учёт в чате:</b> ответьте бойцу сообщением <code>+увал</code> или <code>-увал</code> для моментального изменения баланса.
+          </div>
+        </div>
+
+        <!-- Список бойцов для увалов -->
+        <div class="uval-list" id="uvalCardsList">
+          <div class="loading-state">Загрузка списка бойцов...</div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-secondary-add" id="btnAddMemberUval">
+            <span>+ Добавить бойца в роту</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: СВОДКА & ПРОГНОЗ ================= -->
+      <section id="tabStats" class="tab-content">
+        <!-- Метрики -->
+        <div class="stats-overview-grid">
+          <div class="stat-mini-card">
+            <span class="stat-num" id="statTotalMembers">0</span>
+            <span class="stat-lbl">Всего бойцов</span>
+          </div>
+          <div class="stat-mini-card">
+            <span class="stat-num text-green" id="statActiveMembers">0</span>
+            <span class="stat-lbl">В строю</span>
+          </div>
+          <div class="stat-mini-card">
+            <span class="stat-num text-amber" id="statTotalUvals">0</span>
+            <span class="stat-lbl">Всего увалов</span>
+          </div>
+          <div class="stat-mini-card">
+            <span class="stat-num text-blue" id="statTotalDuties">0</span>
+            <span class="stat-lbl">Смен на кубаре</span>
+          </div>
+        </div>
+
+        <!-- График на 7 дней -->
+        <div class="forecast-section">
+          <div class="section-title-bar">
+            <div>
+              <h2 class="section-heading">📅 График дежурств на 7 дней</h2>
+              <p class="section-sub">Прогноз очереди по активному составу</p>
+            </div>
+          </div>
+          <div class="forecast-cards" id="forecastCardsContainer">
+            <div class="loading-state">Загрузка графика...</div>
+          </div>
+        </div>
+
+        <!-- Рейтинг роты -->
+        <div class="leaderboard-grid">
+          <!-- Топ по увалам -->
+          <div class="leader-card">
+            <div class="leader-title">🎖️ Топ по увалам</div>
+            <div class="leader-list" id="topUvalsList">
+              <div class="loading-state">Загрузка...</div>
+            </div>
+          </div>
+          <!-- Топ по дежурствам -->
+          <div class="leader-card">
+            <div class="leader-title">🧹 Топ по дежурствам</div>
+            <div class="leader-list" id="topDutiesList">
+              <div class="loading-state">Загрузка...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: ЖУРНАЛ СОБЫТИЙ ================= -->
+      <section id="tabLogs" class="tab-content">
+        <div class="section-title-bar">
+          <div>
+            <h2 class="section-heading">История действий</h2>
+            <p class="section-sub">Фиксация всех начислений и дежурств</p>
+          </div>
+          <button class="btn-clear-logs" id="btnClearLogs">Очистить</button>
+        </div>
+
+        <div class="logs-feed" id="logsFeedList">
+          <div class="loading-state">Загрузка журнала...</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= МОДАЛКА: ДОБАВЛЕНИЕ БОЙЦА ================= -->
+  <div class="modal-overlay" id="addMemberModal">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h3 class="modal-title">Добавить бойца в кубарь</h3>
+        <button class="modal-close-btn" id="modalCloseAdd">✕</button>
+      </div>
+
+      <!-- Вкладки добавления: Из чата / Вручную -->
+      <div class="modal-mode-tabs">
+        <button class="mode-tab-btn active" id="tabModeKnown">Из участников чата</button>
+        <button class="mode-tab-btn" id="tabModeManual">Вручную</button>
+      </div>
+
+      <!-- Вариант 1: Из участников чата -->
+      <div class="mode-panel active" id="panelKnown">
+        <label class="field-label">Выберите из писавших в беседу:</label>
+        <select class="styled-select" id="selectKnownUsers">
+          <option value="">-- Участники чата --</option>
+        </select>
+        <p class="field-hint">Список пополняется автоматически, когда участники пишут в чат.</p>
+      </div>
+
+      <!-- Вариант 2: Вручную -->
+      <div class="mode-panel" id="panelManual">
+        <div class="field-group">
+          <label class="field-label">Фамилия и Имя бойца *</label>
+          <input type="text" class="styled-input" id="inputManualName" placeholder="Например: Иванов Алексей">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Telegram Username (без @, необязательно)</label>
+          <input type="text" class="styled-input" id="inputManualUsername" placeholder="ivanov_a">
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn-modal-cancel" id="btnCancelAdd">Отмена</button>
+        <button class="btn-modal-submit" id="btnSubmitAdd">Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= МОДАЛКА: ЗАМЕНА ДЕЖУРНОГО ================= -->
+  <div class="modal-overlay" id="replaceDutyModal">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h3 class="modal-title">Замена ответственного</h3>
+        <button class="modal-close-btn" id="modalCloseReplace">✕</button>
+      </div>
+      <div class="replace-info-box">
+        <p>Будет заменен сегодняшний ответственный за кубарь.</p>
+        <p class="replace-candidate-note">Система выберет активного бойца с наименьшим количеством смен на кубаре для справедливого распределения нагрузки.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-modal-cancel" id="btnCancelReplace">Отмена</button>
+        <button class="btn-modal-submit btn-danger" id="btnConfirmReplace">Подтвердить замену</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

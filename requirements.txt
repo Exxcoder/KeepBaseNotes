@@ -1,0 +1,8 @@
+aiogram>=3.4.0
+fastapi>=0.110.0
+uvicorn>=0.28.0
+apscheduler>=3.10.4
+aiosqlite>=0.20.0
+pydantic>=2.6.0
+pytz>=2024.1
+python-dotenv>=1.0.0
